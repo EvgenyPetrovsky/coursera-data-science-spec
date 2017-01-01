@@ -3,6 +3,7 @@ This codebook describes dataset produced according to project requirements of __
 
 ## Set of attributes
 there are only 4 attributes in dataset
+
 1. __activity__ - activity name according to provided specification. Datatype is `CHARACHTER`. Possible values are: "WALKING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS", "SITTING", "STANDING", "LAYING".
 2. __subject_id__ - person who performed activities. Datatype is `INTEGER`. There are 30 persons who recorded their activities - they are represented by numbers from 1 to 30.
 3. __measurement__ - measurement that was taken during activity monitoring. Datatype is `CHARACTER`. Full list of measurements in [original data](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip) included 561 different values but only __mean__ and __std__ and measurements.
@@ -10,6 +11,7 @@ there are only 4 attributes in dataset
 
 ## Transformations
 Original data was downoladed from [link](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip), extracted from ZIP archive. Folder was into "workdata" and renamed into "input" so script uses this folder to reach data. Only few of many files are processed by script: 
+
 * ./workdata/input/features.txt - feature (measurement) names
 * ./workdata/input/activity_labels.txt - activity names
 * ./workdata/input/train/X_train.txt - train data
@@ -20,6 +22,7 @@ Original data was downoladed from [link](https://d396qusza40orc.cloudfront.net/g
 * ./workdata/input/test/subject_test.txt - test data subjects
 
 These files were processed in a following way
+
 1. data from features.txt file is loaded and 2nd column taken as measurement names
 2. test (X_test.txt) and train (X_train.txt) files are loaded and combined (train on top of test) using `rbind`. measurement names are loaded from eatures.txt file and assigned to dataset columns.
 3. activity IDs from y\_test.txt and y\_train.txt files are loaded and combined after that they are joined (using `merge`) with activity labels (from activity\_labels.txt) file in order to get descriptive values instead of IDs 

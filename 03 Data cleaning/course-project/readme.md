@@ -3,12 +3,14 @@ This course [project](https://www.coursera.org/learn/data-cleaning/peer/FIZtT/ge
 
 ## Folder contents
 folder "course project" contains three files: 
+
 1. codebook.md - assignmeng codebook
 2. readme.md - this file
 3. run_analysis.R - assignment script
 
 ## Requirements
 In order to make script work some requirements should be met
+
 * R installation should contain `dplyr` and `tidyr` packages installed (run install.packages in order to install)
 * working directory should contain folder __./workdata/input__ with assignment [data](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip) (__UCI HAR Dataset__ folder should replaced into __workdata__ folder and renamed into __input__)
 
