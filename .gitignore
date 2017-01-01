@@ -1,7 +1,9 @@
 # mac files:
 .DS_Store
-# R files
+
+# R files:
 .RData
 .Rhistory
-# data files
+
+# data files:
 **/workdata
