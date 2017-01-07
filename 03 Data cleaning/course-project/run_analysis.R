@@ -6,18 +6,19 @@
 # Data files are already extracted into "workdata" folder.
 # script should be executed from working directory containing "workdata".
 
-# loading libraries
+# loading libraries: dplyr for manipulation and tidyr for reshaping
 library(dplyr)
 
 # defining file paths
-featfile      <- "./workdata/features.txt"
-actlblfile    <- "./workdata/activity_labels.txt"
-trainfile     <- "./workdata/train/X_train.txt"
-testfile      <- "./workdata/test/X_test.txt"
-acttestfile   <- "./workdata/test/y_test.txt"
-acttrainfile  <- "./workdata/train/y_train.txt"
-subjtestfile  <- "./workdata/test/subject_test.txt"
-subjtrainfile <- "./workdata/train/subject_train.txt"
+featfile      <- "./workdata/input/features.txt"
+actlblfile    <- "./workdata/input/activity_labels.txt"
+trainfile     <- "./workdata/input/train/X_train.txt"
+testfile      <- "./workdata/input/test/X_test.txt"
+acttestfile   <- "./workdata/input/test/y_test.txt"
+acttrainfile  <- "./workdata/input/train/y_train.txt"
+subjtestfile  <- "./workdata/input/test/subject_test.txt"
+subjtrainfile <- "./workdata/input/train/subject_train.txt"
+tidyfile      <- "./workdata/output/tidy.txt"
 
 # reading feature names from file and storing them as vector
 feature <- read.delim(
@@ -47,8 +48,10 @@ acttest <- read.table(file = acttestfile, header = F,
                        col.names = "activity_id")
 # combine activity data
 activity <- rbind(acttrain, acttest)
-# megre activity data and labels
+
+# STEP3 - use descriptive activity names megre activity data and labels
 activity <- merge(x = activity, y = actlabel)[2]
+
 # reading subjects data
 subjtrain <- read.table(file <- subjtrainfile, header = F, 
                         col.names = "subject_id")
@@ -57,12 +60,28 @@ subjtest  <- read.table(file <- subjtestfile, header = F,
 # merge subjects data
 subject <- rbind(subjtrain, subjtest)
 
+# STEP4 - use all variables in dataset are labeled. 
 # put activities subjects and measurements together
 data <- cbind(activity, subject, data)
 
 # convert data to tbl class
 data <- tbl_df(data)
 
-# extract only means and standard deviations
-data <- data %>% 
+
+# STEP2 - extract only means and standard deviations
+data1 <- data %>% 
   select( activity, subject_id, contains(".mean"), contains(".std") )
+
+
+# STEP5
+# find summaries for measurement values
+# melt dataset
+molten <- tidyr::gather(data, measurement, value, -activity, -subject_id, na.rm = T)
+# assign group condition and summarize
+data2 <- molten %>% 
+  group_by(activity, subject_id, measurement) %>%
+  summarise(mean(value))
+
+# writing data2 to file for submission
+if (file.exists(tidyfile)) file.remove(tidyfile)
+write.table(data2, file = tidyfile, col.names = T, row.names = F)
