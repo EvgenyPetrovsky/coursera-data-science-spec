@@ -21,6 +21,8 @@ readdata <- function() {
   data <- subset(data, Date == "1/2/2007" | Date == "2/2/2007")
   
   # returning resulting dataset
+  data$Time <- with(data, strptime(paste(Date, Time), "%d/%m/%Y %H:%M:%S"))
+  data$Date <- as.Date(data$Date, "%d/%m/%Y")
   data
 }
 
