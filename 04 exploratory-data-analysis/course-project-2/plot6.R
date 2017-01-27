@@ -35,7 +35,7 @@ allYears <-
 
 
 # open png device
-png("./workdata/output/plot5.png", width = 800, height = 500)
+png("./workdata/output/plot6.png", width = 800, height = 500)
 
 # plotting
 plotObject <- 
