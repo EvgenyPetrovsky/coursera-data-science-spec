@@ -1,6 +1,5 @@
 # loading libraries
 library(dplyr)
-library(ggplot2)
 
 # reading datasets
 ## This first line will likely take a few seconds. Be patient!

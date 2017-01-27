@@ -21,7 +21,6 @@ limYears <- allYears %>%
     # filter by 1999 and 2008 years only
     filter(year %in% c(1999, 2008))
   
-
 # open png device
 png("./workdata/output/plot3.png", width = 800, height = 500)
 
