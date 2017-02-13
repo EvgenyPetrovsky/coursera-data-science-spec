@@ -8,12 +8,15 @@ output:
 
 
 ## Loading and preprocessing the data
+
 ```{r setup, include = FALSE}
 # before we start we need to set up working directory
 knitr::opts_knit$set(root.dir = "~/Documents/gitrepo/RepData_PeerAssessment1/")
 library(dplyr)
 library(ggplot2)
 ```
+
+### 1. Load the data
 
 Data provided with assignment was unzipped into `./workdata/input` folder. Data resides in a file of CSV format with header. Data elements are: `steps`, `date`, `interval`. 
 Loading the data using `read.csv()` and transforming object into table for firther manupulations
@@ -29,6 +32,8 @@ Here is how first records of data look like
 head(activity)
 ```
 
+### 2. Process/transform the data
+
 Next step is to process/transform the data (if necessary) into a format suitable for analysis. 
 columns 2 and 3 contain Date and Time, so we need to combine them into 1 value.
 First let's translate time into HHMM format by adding leading zeros. Then create new attribute that contains time series in POSIXct format
@@ -40,6 +45,8 @@ activity$date <- as.Date(activity$date)
 
 ## What is mean total number of steps taken per day?
 
+### 1. Calculate the total number of steps taken per day
+
 Our dataset already has column with date, called `date`. Let's group by date and summarize steps within date just ignoring NA values. After that we can find average number of steps across all days.
 ```{r "steps by day"}
 daysummary <- 
@@ -48,6 +55,8 @@ daysummary <-
   summarize(stepsum = sum(steps, na.rm = T)) %>%
   select(stepsum)
 ```
+
+### 2. Make a histogram of the total number of steps taken each day
 
 This is histogram of the total number of steps taken each day.
 ```{r "total steps hist"}
@@ -58,6 +67,8 @@ qplot(
 )
 ```
 
+### 3. Calculate and report the mean and median of the total number of steps taken per day
+
 Mean and Median values are
 ```{r "total steps mean median"}
 daysummary %>% 
@@ -65,6 +76,8 @@ summarize(mean = mean(stepsum, na.rm = T), median = median(stepsum, na.rm = T))
 ```
 
 ## What is the average daily activity pattern?
+
+### 1. Make a time series plot
 
 In order to get average daily activity pattern we need to find interval averages across all days.
 First we group data by interval, then we calculate averages removing all NA values, finally we build plot that shows average number of steps by intervals
@@ -81,12 +94,16 @@ qplot(
 )
 ```
 
+### 2. Which 5-minute interval contains the maximum number of steps?
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 ```{r "time interval max steps"}
 arrange(pattern, desc(avgsteps))[1, ]
 ```
 
 ## Imputing missing values
+
+### 1. Calculate and report the total number of missing values in the dataset
 
 Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
@@ -96,18 +113,29 @@ Let's calculate and report the total number of missing values in the dataset (i.
 sum(is.na(activity$steps))
 ```
 
-We will use a simple strategy for filling in all of the missing values in the dataset. Substitute **median** value for that 5-minute interval. Here we create a new dataset that is equal to the original dataset but with the missing data filled in.
+### 2. Devise a strategy for filling in all of the missing values in the dataset.
+
+We will use a simple strategy for filling in all of the missing values in the dataset - by substituting **median** value for corresponding 5-minute interval. 
+
+### 3. Create a dataset with the missing data filled in.
+
+Here we - instead of introducing new dataset - create a new dataset columns `mediansteps` with median of steps and `impsteps` - steps with all empty values replaced by mediansteps.
 
 ```{r "imputed activity"}
+med <- activity %>% 
+  group_by(interval) %>% 
+  summarize(mediansteps = median(steps, na.rm = T)) %>%
+  select(interval, mediansteps)
+
 activity <- activity %>%
-  inner_join(
-    activity %>% 
-      group_by(interval) %>% 
-      summarize(mediansteps = median(steps, na.rm = T)) %>%
-      select(interval, mediansteps)
-  ) %>%
+  select(steps, date, interval) %>%
+  inner_join(med, by = "interval") %>%
   mutate(impsteps = ifelse(is.na(steps), mediansteps, steps))
+
+rm("med")
 ```
+
+### 4. Make a histogram and Calculate and report the mean and median
 
 Let's look at histogram of the total number of steps taken each day ...
 
@@ -137,6 +165,8 @@ Do these values differ from the estimates from the first part of the assignment.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+### 1. Create a new variable “weekday” and “weekend”
+
 We create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 ```{r "dayofweek"}
 activity <- activity %>%
@@ -145,6 +175,8 @@ activity <- activity %>%
     "weekend", "weekday"))
   )
 ```
+
+### 2. Make a panel plot containing a time series plot
 
 We make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
