@@ -1,0 +1,163 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+author: Evgeny Petrovsky
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+## Loading and preprocessing the data
+```{r setup, include = FALSE}
+# before we start we need to set up working directory
+knitr::opts_knit$set(root.dir = "~/Documents/gitrepo/RepData_PeerAssessment1/")
+library(dplyr)
+library(ggplot2)
+```
+
+Data provided with assignment was unzipped into `./workdata/input` folder. Data resides in a file of CSV format with header. Data elements are: `steps`, `date`, `interval`. 
+Loading the data using `read.csv()` and transforming object into table for firther manupulations
+```{r readdata}
+activity <- read.csv(
+  file = "./workdata/input/activity.csv", header = T, quote = "\"", 
+  colClasses = c("numeric", "character", "character")
+)
+```
+
+Here is how first records of data look like
+```{r show_activity_head}
+head(activity)
+```
+
+Next step is to process/transform the data (if necessary) into a format suitable for analysis. 
+columns 2 and 3 contain Date and Time, so we need to combine them into 1 value.
+First let's translate time into HHMM format by adding leading zeros. Then create new attribute that contains time series in POSIXct format
+```{r timeformat}
+activity <- tbl_df(activity)
+
+activity$date <- as.Date(activity$date)
+```
+
+## What is mean total number of steps taken per day?
+
+Our dataset already has column with date, called `date`. Let's group by date and summarize steps within date just ignoring NA values. After that we can find average number of steps across all days.
+```{r "steps by day"}
+daysummary <- 
+  activity %>% 
+  group_by(date) %>% 
+  summarize(stepsum = sum(steps, na.rm = T)) %>%
+  select(stepsum)
+```
+
+This is histogram of the total number of steps taken each day.
+```{r "total steps hist"}
+qplot(
+  data = daysummary, x = stepsum, bins = 15,
+  main = "Total number of steps taken each day",
+  xlab = "Total number of steps", ylab = "Number of days"
+)
+```
+
+Mean and Median values are
+```{r "total steps mean median"}
+daysummary %>% 
+summarize(mean = mean(stepsum, na.rm = T), median = median(stepsum, na.rm = T))
+```
+
+## What is the average daily activity pattern?
+
+In order to get average daily activity pattern we need to find interval averages across all days.
+First we group data by interval, then we calculate averages removing all NA values, finally we build plot that shows average number of steps by intervals
+```{r "average steps by interval"}
+pattern <- 
+  activity %>%
+  group_by(interval) %>%
+  summarize(avgsteps = mean(steps, na.rm = T))
+
+qplot(
+  data = pattern, x = as.numeric(interval), y = avgsteps, geom = "line", 
+  main = "Dailty activity pattern", 
+  xlab = "Interval", ylab = "Average number of steps"
+)
+```
+
+Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r "time interval max steps"}
+arrange(pattern, desc(avgsteps))[1, ]
+```
+
+## Imputing missing values
+
+Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
+
+Let's calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+
+```{r "NA number"}
+sum(is.na(activity$steps))
+```
+
+We will use a simple strategy for filling in all of the missing values in the dataset. Substitute **median** value for that 5-minute interval. Here we create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r "imputed activity"}
+activity <- activity %>%
+  inner_join(
+    activity %>% 
+      group_by(interval) %>% 
+      summarize(mediansteps = median(steps, na.rm = T)) %>%
+      select(interval, mediansteps)
+  ) %>%
+  mutate(impsteps = ifelse(is.na(steps), mediansteps, steps))
+```
+
+Let's look at histogram of the total number of steps taken each day ...
+
+```{r "imputed steps by day"}
+impdaysummary <- 
+  activity %>% 
+  group_by(date) %>% 
+  summarize(impstepsum = sum(impsteps, na.rm = T)) %>%
+  select(impstepsum)
+
+qplot(
+  data = impdaysummary, x = impstepsum, bins = 15,
+  main = "Total number of steps taken each day",
+  xlab = "Total number of steps", ylab = "Number of days"
+)
+
+```
+
+...and Calculate and report the mean and median total number of steps taken per day. 
+
+```{r "total adjusted steps mean median"}
+impdaysummary %>% 
+summarize(mean = mean(impstepsum, na.rm = T), median = median(impstepsum, na.rm = T))
+```
+
+Do these values differ from the estimates from the first part of the assignment. Because we substitute missing values with median value for specific period. Median and mean values are close to each other. There is no impact of imputing missing data on the estimates of median value of the total daily number of steps and slight impact on mean value (because we used median for imputing)?
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+We create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+```{r "dayofweek"}
+activity <- activity %>%
+  mutate(weekday = as.factor(ifelse(
+    weekdays(activity$date) %in% c("Saturday", "Sunday"), 
+    "weekend", "weekday"))
+  )
+```
+
+We make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+```{r "wd pattern"}
+wdpattern <- 
+  activity %>%
+  group_by(interval, weekday) %>%
+  summarize(avgsteps = mean(impsteps, na.rm = T))
+
+qplot(
+  data = wdpattern, x = as.numeric(interval), y = avgsteps, geom = "line",
+  facets = weekday ~ .,
+  main = "Weekday / weekend activity pattern", 
+  xlab = "Interval", ylab = "Average number of steps"
+)
+```
