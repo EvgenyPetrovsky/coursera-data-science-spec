@@ -2,9 +2,14 @@
 .DS_Store
 
 # R files:
-.RData
-.Rhistory
+*.RData
+*.rdb
+*.rdx
+*.Rhistory
 
 # data files:
 **/workdata
-/temp
+
+# temp files
+**/temp
+~temp.*
