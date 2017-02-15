@@ -19,16 +19,46 @@ locfile <- "../workdata/input/StormData.csv.bz2"
 ## Synopsis
 
 max 10 sentences {r dataurl}
+what is exercise, what data is used. what are main questions to answer. how it was done. what are results.
 
 ## Data Processing
 
-Data is awailable in internet by [link](`r dataurl`). we download it and store in working folder for further use and loading into R.
+Data is the form of a comma-separated-value [file](`r dataurl`) compressed via the bzip2 algorithm to reduce its size. We download it and store in working folder for further use and loading into R. 
+
 ```{r "load data", cache=TRUE}
 if ( !file.exists(locfile)) {
   download.file(dataurl, locfile, method = "curl")
 }
-dataset <- read.csv(locfile, header = T, nrows = 1e3)
+dataset <- read.table(locfile, header = T, sep = ",", nrows = 1e5)
 ```
 
+This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take State, Date, Event Type, Fatalities, Injuries, Prop
+
+```{r "pick some attributes"}
+workset <- tbl_df(
+  dataset[,c("STATE", "EVTYPE", "FATALITIES", "INJURIES", "PROPDMG")]
+)
+workset$BGN_DATE <- as.Date(as.character(dataset$BGN_DATE), format = "%m/%d/%Y")
+```
+
+Sumarize data
+
+```{r "summarize by Year and Event Type}
+sumyrtp <- workset %>%
+  group_by(EVTYPE, YEAR = as.numeric(format(BGN_DATE, "%Y"))) %>%
+  summarize(
+    INJURIES = sum(INJURIES, na.rm = T), 
+    FATALITIES = sum(FATALITIES, na.rm = T), 
+    PROPDMG = sum(PROPDMG, na.rm = T)
+  )
+
+```
 ## Results
+
+Plot injuries and fatalities by years 
+
+```{r "people health"}
+qplot(data = sumyrtp, x = YEAR, y = INJURIES, col = EVTYPE, geom = "line")
+```
+
 
