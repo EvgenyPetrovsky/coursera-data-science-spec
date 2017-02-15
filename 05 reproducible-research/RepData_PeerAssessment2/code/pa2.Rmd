@@ -1,0 +1,34 @@
+---
+title: "Severe weather events"
+output: html_document
+---
+
+```{r "initialization", include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# loading libraries
+library(ggplot2)
+library(dplyr)
+
+# initializing constatns
+dataurl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+locfile <- "../workdata/input/StormData.csv.bz2"
+
+```
+
+## Synopsis
+
+max 10 sentences {r dataurl}
+
+## Data Processing
+
+Data is awailable in internet by [link](`r dataurl`). we download it and store in working folder for further use and loading into R.
+```{r "load data", cache=TRUE}
+if ( !file.exists(locfile)) {
+  download.file(dataurl, locfile, method = "curl")
+}
+dataset <- read.csv(locfile, header = T, nrows = 1e3)
+```
+
+## Results
+
