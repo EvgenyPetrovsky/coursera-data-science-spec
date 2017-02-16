@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # loading libraries
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 
 # initializing constatns
 dataurl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
@@ -18,47 +19,105 @@ locfile <- "../workdata/input/StormData.csv.bz2"
 
 ## Synopsis
 
+TODO
 max 10 sentences {r dataurl}
-what is exercise, what data is used. what are main questions to answer. how it was done. what are results.
+
+* what is exercise, 
+* what data is used. 
+* what are main questions to answer. 
+* how it was done. 
+* what are results.
 
 ## Data Processing
 
-Data is the form of a comma-separated-value [file](`r dataurl`) compressed via the bzip2 algorithm to reduce its size. We download it and store in working folder for further use and loading into R. 
+Data is available in the form of a comma-separated-value [file](`r dataurl`) compressed via the bzip2 algorithm to reduce its size. We download it and store in working folder for further use in our study. 
 
 ```{r "load data", cache=TRUE}
 if ( !file.exists(locfile)) {
   download.file(dataurl, locfile, method = "curl")
 }
-dataset <- read.table(locfile, header = T, sep = ",", nrows = 1e5)
+dataset <- read.table(locfile, header = T, sep = ",")
 ```
 
-This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take State, Date, Event Type, Fatalities, Injuries, Prop
+This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take State, Date, Event Type, Fatalities, Injuries, PropDmg, CropDmg.
 
 ```{r "pick some attributes"}
 workset <- tbl_df(
-  dataset[,c("STATE", "EVTYPE", "FATALITIES", "INJURIES", "PROPDMG")]
+  dataset[,c("STATE", "EVTYPE", 
+             "FATALITIES", "INJURIES", 
+             "PROPDMG",
+             "CROPDMG", "CROPDMGEXP")]
 )
 workset$BGN_DATE <- as.Date(as.character(dataset$BGN_DATE), format = "%m/%d/%Y")
+workset$PROPDMGEXP <- toupper(dataset$PROPDMGEXP)
+workset$CROPDMGEXP <- toupper(dataset$CROPDMGEXP)
 ```
 
 Sumarize data
 
-```{r "summarize by Year and Event Type}
+```{r "summarize by Year and Event Type"}
 sumyrtp <- workset %>%
-  group_by(EVTYPE, YEAR = as.numeric(format(BGN_DATE, "%Y"))) %>%
-  summarize(
-    INJURIES = sum(INJURIES, na.rm = T), 
-    FATALITIES = sum(FATALITIES, na.rm = T), 
-    PROPDMG = sum(PROPDMG, na.rm = T)
+  left_join(
+    tbl_df(data.frame(PROPDMGEXP = c('K', 'M', 'B'), prop.ratio = c(1e3, 1e6, 1e9)))
+  ) %>%
+  left_join(
+    tbl_df(data.frame(CROPDMGEXP = c('K', 'M', 'B'), crop.ratio = c(1e3, 1e6, 1e9)))
+  ) %>%
+  mutate(
+    PROPERTYDAMAGE = PROPDMG * ifelse(is.na(prop.ratio), 1, prop.ratio),
+    CROPDAMAGE = CROPDMG * ifelse(is.na(crop.ratio), 1, crop.ratio)
+  ) %>%
+  gather(
+    key = "IMPACT", 
+    value = "VALUE", 
+    c(INJURIES, FATALITIES, PROPERTYDAMAGE, CROPDAMAGE)
+  ) %>%
+  group_by( 
+#    EVTYPE, 
+    YEAR = as.numeric(format(BGN_DATE, "%Y")), 
+    IMPACT 
+  ) %>%
+  summarize( 
+    VALUE = sum(VALUE, na.rm = T) 
   )
-
 ```
 ## Results
 
 Plot injuries and fatalities by years 
 
 ```{r "people health"}
-qplot(data = sumyrtp, x = YEAR, y = INJURIES, col = EVTYPE, geom = "line")
+ggplot(
+  data = subset(sumyrtp, IMPACT %in% c("INJURIES", "FATALITIES")),
+#  aes(x = YEAR, y = VALUE, colour = EVTYPE)
+  aes(x = YEAR, y = VALUE)
+  ) + 
+  geom_line() + 
+#  geom_jitter() + 
+#  geom_point(size = 2) + 
+  facet_grid(facets = IMPACT ~ ., scale = "free_y") +
+  labs(
+    title = "Impact on people health over years",
+    x = "Year", y = "Number of People"
+  )
 ```
 
+Plot property damage by years 
 
+```{r "prop damage"}
+ggplot(
+  data = subset(sumyrtp, IMPACT %in% c("PROPERTYDAMAGE", "CROPDAMAGE")),
+  aes(x = YEAR, y = VALUE / 1e9)
+  ) + 
+  geom_line() + 
+  facet_grid(facets = IMPACT ~ ., scale = "free_y") +
+  labs(
+    title = "Property damage over years", 
+    x = "Year", y = "Damage in Billions of US Dollars"
+  )
+```
+
+Most harmful event types
+
+```{r "evtype rating"}
+
+```
