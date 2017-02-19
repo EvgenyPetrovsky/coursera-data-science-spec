@@ -19,21 +19,12 @@ locfile <- "../workdata/input/StormData.csv.bz2"
 
 ## Synopsis
 
-TODO
-max 10 sentences {r dataurl}
-
-* what is exercise,
-* what are main questions to answer. 
-* what data is used.
-* how it was done.
-* what are results.
-
 The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events. Questions to be answered:
 
 1. most harmful events with respect to population health
 2. events with the greatest economic consequences
 
-We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. 
+We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. First we process data in order to have it in a proper shape, then we plot data as graps and finally we reason about it.  
 
 ## Data Processing
 
@@ -46,7 +37,7 @@ if ( !file.exists(locfile)) {
 dataset <- read.table(locfile, header = T, sep = ",")
 ```
 
-This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take State, Date, Event Type, Fatalities, Injuries, PropDmg, CropDmg.
+This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take `State`, `Date`, `Event Type`, `Fatalities`, `Injuries`, `PropDmg`, `CropDmg`.
 
 ```{r "pick attributes", cache = TRUE}
 # extract necessary columns
@@ -58,9 +49,17 @@ workset <- tbl_df(
              "BGN_DATE"
              )]
   ) %>%
+  mutate(
+    BGN_DATE = as.Date(as.character(BGN_DATE), format = "%m/%d/%Y")
+  )
+```
+
+Property and Crop damage are do not contain amounts of the same order. So `PROPDMGEXP` and `PROPDMGEXP` which define degree of amount should be considered. possible values are K - thousands, M - millions, B - billions.
+
+``` {r "date and amount", cache = TRUE}
+workset <- workset %>%
   # convert date and amount orders (K = 10^3, M - 10^6, B = 10^9)
   mutate(
-    BGN_DATE = as.Date(as.character(BGN_DATE), format = "%m/%d/%Y"),
     PROPDMGEXP = toupper(PROPDMGEXP),
     CROPDMGEXP = toupper(CROPDMGEXP)
   ) %>%
@@ -74,7 +73,13 @@ workset <- tbl_df(
   mutate(
     PROPERTYDAMAGE = PROPDMG * ifelse(is.na(prop.ratio), 1, prop.ratio),
     CROPDAMAGE = CROPDMG * ifelse(is.na(crop.ratio), 1, crop.ratio)
-  ) %>%
+  )
+```
+
+For more convenient use in reporting we gather variables into one column VALUE and introduce IMPACT type.
+
+```{r "gather", cache = T}
+workset <- workset %>%
   # make it long
   gather(
     key = "IMPACT", 
@@ -171,7 +176,7 @@ ggplot(
   coord_flip()
 ```
 
-### History of tornado
+### Tornado consequences over years
 
 Most harmful event types for people health
 
