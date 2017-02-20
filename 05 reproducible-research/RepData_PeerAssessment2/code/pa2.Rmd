@@ -6,34 +6,25 @@ output: html_document
 ```{r "initialization"}
 knitr::opts_chunk$set(echo = TRUE)
 
-# loading libraries
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
 # initializing constatns
 dataurl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 locfile <- "../workdata/input/StormData.csv.bz2"
 
+# loading libraries
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
 ```
 
 ## Synopsis
-
-TODO
-max 10 sentences {r dataurl}
-
-* what is exercise,
-* what are main questions to answer. 
-* what data is used.
-* how it was done.
-* what are results.
 
 The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events. Questions to be answered:
 
 1. most harmful events with respect to population health
 2. events with the greatest economic consequences
 
-We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. 
+We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. And look a bit closer at events that impact on people health.  
 
 ## Data Processing
 
