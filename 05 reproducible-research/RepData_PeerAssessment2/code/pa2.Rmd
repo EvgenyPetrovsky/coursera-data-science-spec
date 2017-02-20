@@ -3,7 +3,7 @@ title: "Severe weather events"
 output: html_document
 ---
 
-```{r "initialization", include=FALSE}
+```{r "initialization"}
 knitr::opts_chunk$set(echo = TRUE)
 
 # loading libraries
@@ -139,23 +139,9 @@ sumyrtp <- workset %>%
 
 ## Results
 
-Plot injuries and fatalities by years 
+### Property damage by event types
 
-```{r "plot people health"}
-ggplot(
-  subset(top5ev, IMPACTTYPE == "HEALTH"),
-  aes(x=reorder(EVTYPE, graphorder), y=VALUE/1e3, fill = EVTYPE)
-  ) +
-  geom_bar(stat='identity', show.legend = F, width = .75) +
-  facet_grid(facets = IMPACT ~ .) +
-  labs(
-    title = "Impact on people health over years",
-    x = "Event Type", y = "Thousands of People"
-  ) +
-  coord_flip()
-```
-
-Plot property damage by years 
+Let's plot property damage by event types
 
 ```{r "plot prop damage"}
 ggplot(
@@ -171,19 +157,34 @@ ggplot(
   coord_flip()
 ```
 
-### History of tornado
+As it can bee seen, DROUGH has biggest negatinve impact to agriculture while it doesn't harm property. And FLOOD is most harmful weather event for property while it is not that severe for crop. Another conclusion is that property is more exposed to severe weather events compare to crop. At least in our Top-5 rating.
 
-Most harmful event types for people health
+### Injuries and fatalities by event types
 
-```{r }
-hevtypes <- unique((as.character(sumyrtp[sumyrtp$IMPACTTYPE == "HALTH", ]$EVTYPE)))
-top1evtype <- paste(hevtypes, collapse = ", ")
-rm("hevtypes")
+Let's plot how weather events types affect people health and find out top-5 with highest impact.
+
+```{r "plot people health"}
+ggplot(
+  subset(top5ev, IMPACTTYPE == "HEALTH"),
+  aes(x=reorder(EVTYPE, graphorder), y=VALUE/1e3, fill = EVTYPE)
+  ) +
+  geom_bar(stat='identity', show.legend = F, width = .75) +
+  facet_grid(facets = IMPACT ~ .) +
+  labs(
+    title = "Impact on people health over years",
+    x = "Event Type", y = "Thousands of People"
+  ) +
+  coord_flip()
 ```
 
-Let's look what were observations for `r top1evtype`.
+Chart above clearly shows that tornados have most impact on people health. Number of injuries is 10 times higher than any other event.
 
-````{r "plot history"}
+### History of tornado
+
+Most harmful event type for people health is TORNADO.
+Let's look what were observations for it.
+
+```{r "plot history"}
 ggplot(
   subset(sumyrtp, IMPACTTYPE == "HEALTH"),
   aes(x=YEAR, y=VALUE, fill = EVTYPE)
@@ -196,4 +197,4 @@ ggplot(
   )
 ```
 
-
+Number of injuries and fatalities didn't descrease in course of last years. Year 2011 observations show that number of fatalities is highest since the beginning of observations. Number of injuries is number 2 among other years.
