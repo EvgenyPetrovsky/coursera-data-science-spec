@@ -3,17 +3,17 @@ title: "Severe weather events"
 output: html_document
 ---
 
-```{r "initialization", include=FALSE}
+```{r "initialization"}
 knitr::opts_chunk$set(echo = TRUE)
-
-# loading libraries
-library(ggplot2)
-library(dplyr)
-library(tidyr)
 
 # initializing constatns
 dataurl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 locfile <- "../workdata/input/StormData.csv.bz2"
+
+# loading libraries
+library(ggplot2)
+library(tidyr)
+library(dplyr)
 
 ```
 
@@ -24,7 +24,7 @@ The basic goal of this assignment is to explore the NOAA Storm Database and answ
 1. most harmful events with respect to population health
 2. events with the greatest economic consequences
 
-We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. First we process data in order to have it in a proper shape, then we plot data as graps and finally we reason about it.  
+We use U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database to find answer to these questions. And look a bit closer at events that impact on people health.  
 
 ## Data Processing
 
@@ -37,7 +37,12 @@ if ( !file.exists(locfile)) {
 dataset <- read.table(locfile, header = T, sep = ",")
 ```
 
-This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take `State`, `Date`, `Event Type`, `Fatalities`, `Injuries`, `PropDmg`, `CropDmg`.
+This dataset is about 500 MB and contains 37 variables. Description is provided by National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf). For our study we need only some of them: let's take State, Date, Event Type, Fatalities, Injuries, PropDmg, CropDmg. 
+
+We will use
+
+* `FATALITIES` and `INJURIES` to assess impact on health;
+* `PROPDMG` and `CROPDMG` to assess economic consequences.
 
 ```{r "pick attributes", cache = TRUE}
 # extract necessary columns
@@ -48,15 +53,12 @@ workset <- tbl_df(
              "CROPDMGEXP", "PROPDMGEXP",
              "BGN_DATE"
              )]
-  ) %>%
-  mutate(
-    BGN_DATE = as.Date(as.character(BGN_DATE), format = "%m/%d/%Y")
   )
 ```
 
-Property and Crop damage are do not contain amounts of the same order. So `PROPDMGEXP` and `PROPDMGEXP` which define degree of amount should be considered. possible values are K - thousands, M - millions, B - billions.
+In order to manupulate with Damage values they should be *normalized* first. Based on respective EXP columns that contain `K` (thousands), `M` (millions), `B` (billions) we can come to common demoninator. We also translate date into date format.
 
-``` {r "date and amount", cache = TRUE}
+```{r normalize, cache = TRUE}
 workset <- workset %>%
   # convert date and amount orders (K = 10^3, M - 10^6, B = 10^9)
   mutate(
@@ -73,12 +75,12 @@ workset <- workset %>%
   mutate(
     PROPERTYDAMAGE = PROPDMG * ifelse(is.na(prop.ratio), 1, prop.ratio),
     CROPDAMAGE = CROPDMG * ifelse(is.na(crop.ratio), 1, crop.ratio)
-  )
+  ) 
 ```
 
-For more convenient use in reporting we gather variables into one column VALUE and introduce IMPACT type.
+We gather variables `FATALITIES`, `INJURIES`, `PROPDMG` and `CROPDMG` into one column because it becomes easier to make comparative analysis. We group data by years because information about exact date is excessive in our case.
 
-```{r "gather", cache = T}
+```{r melt, cache = TRUE}
 workset <- workset %>%
   # make it long
   gather(
@@ -87,13 +89,22 @@ workset <- workset %>%
     c(INJURIES, FATALITIES, PROPERTYDAMAGE, CROPDAMAGE)
   ) %>%
   mutate(
-    IMPACTTYPE = ifelse(IMPACT %in% c("INJURIES", "FATALITIES"), "HEALTH", "PROPERTY")
+    IMPACTTYPE = ifelse(IMPACT %in% c("INJURIES", "FATALITIES"), "HEALTH", "ECONOMY")
   ) %>%
   # keep only useful columns
   select(
     EVTYPE, IMPACTTYPE, IMPACT, VALUE, BGN_DATE
+  ) %>%
+  group_by(
+    EVTYPE, IMPACTTYPE, IMPACT, 
+    YEAR = as.numeric(format(BGN_DATE, "%Y"))
+  ) %>%
+  summarise(
+    VALUE = sum(VALUE, na.rm = T)
   )
 ```
+
+To find most harmful events we compare total impact over all years. 
 
 Sumarize data: group data by impact and event types. Rank event types by impact; top-5 event types with highest impact will be plotted later.
 
@@ -128,7 +139,7 @@ For event types that impact health most (#1 in top-5 ranking) take summary by ye
 sumyrtp <- workset %>%
   group_by( 
     EVTYPE, 
-    YEAR = as.numeric(format(BGN_DATE, "%Y")), 
+    YEAR, 
     IMPACTTYPE,
     IMPACT 
   ) %>%
@@ -144,7 +155,29 @@ sumyrtp <- workset %>%
 
 ## Results
 
-Plot injuries and fatalities by years 
+### Property damage by event types
+
+Let's plot property damage by event types
+
+```{r "plot prop damage"}
+ggplot(
+  subset(top5ev, IMPACTTYPE == "ECONOMY"),
+  aes(x=reorder(EVTYPE, graphorder), y=VALUE/1e9, fill = EVTYPE)
+  ) +
+  geom_bar(stat='identity', show.legend = F, width = .75) +
+  facet_grid(facets = IMPACT ~ .) +
+  labs(
+    title = "Property damage by Event Types", 
+    x = "Event Type", y = "Damage in Billions of US Dollars"
+  ) +
+  coord_flip()
+```
+
+As it can bee seen, DROUGH has biggest negatinve impact to agriculture while it doesn't harm property. And FLOOD is most harmful weather event for property while it is not that severe for crop. Another conclusion is that property is more exposed to severe weather events compare to crop. At least in our Top-5 rating.
+
+### Injuries and fatalities by event types
+
+Let's plot how weather events types affect people health and find out top-5 with highest impact.
 
 ```{r "plot people health"}
 ggplot(
@@ -160,45 +193,24 @@ ggplot(
   coord_flip()
 ```
 
-Plot property damage by years 
+Chart above clearly shows that tornados have most impact on people health. Number of injuries is 10 times higher than any other event.
 
-```{r "plot prop damage"}
-ggplot(
-  subset(top5ev, IMPACTTYPE == "PROPERTY"),
-  aes(x=reorder(EVTYPE, graphorder), y=VALUE/1e9, fill = EVTYPE)
-  ) +
-  geom_bar(stat='identity', show.legend = F, width = .75) +
-  facet_grid(facets = IMPACT ~ .) +
-  labs(
-    title = "Property damage over years", 
-    x = "Event Type", y = "Damage in Billions of US Dollars"
-  ) +
-  coord_flip()
-```
+### History of tornado
 
-### Tornado consequences over years
+Most harmful event type for people health is TORNADO.
+Let's look what were observations for it.
 
-Most harmful event types for people health
-
-```{r }
-hevtypes <- unique((as.character(sumyrtp[sumyrtp$IMPACTTYPE == "HALTH", ]$EVTYPE)))
-top1evtype <- paste(hevtypes, collapse = ", ")
-rm("hevtypes")
-```
-
-Let's look what were observations for `r top1evtype`.
-
-````{r "plot history"}
+```{r "plot history"}
 ggplot(
   subset(sumyrtp, IMPACTTYPE == "HEALTH"),
   aes(x=YEAR, y=VALUE, fill = EVTYPE)
   ) +
-  geom_bar(stat='identity', show.legend = T, width = .75) +
+  geom_bar(stat='identity', show.legend = F, width = .75) +
   facet_grid(facets = IMPACT ~ ., scales = "free_y") +
   labs(
-    title = "Events damage",
+    title = "TORNADO impact on population health",
     x = "Year", y = "Number of People"
   )
 ```
 
-
+Number of injuries and fatalities didn't descrease in course of last years. Year 2011 observations show that number of fatalities is highest since the beginning of observations. Number of injuries is number 2 among other years.
