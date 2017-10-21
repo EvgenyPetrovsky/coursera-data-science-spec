@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
 ```
 
 ## Defining parameters
@@ -15,16 +16,31 @@ In this project we will investigate the exponential distribution in R and compar
 
 ## Exploring Exponential distribution
 
+According to assignment we need to run 1000 simulations to find averages of 40 exponentials within each simulation. Set parameters up
+
 ```{r set parameters}
+# make result reproducible
 set.seed(123)
-n <- 40
-lambda <- 0.2
-dist <- rexp(n, lambda)
+# number of simulations
+nsim <- 1000
+# exp distribution parameters
+n <- 40; lambda <- 0.2
 ```
 
-Let's have a look at a histogram and a summary of this distribution
-```{r summary}
+Run simulations and before we calculate averages let's look into original distribution
+```{r run-sim}
+simulation <- rexp(n * nsim, lambda)
+hist(simulation)
+```
+and calculate avewrage for each simulation
+```{r calc-avg}
+dist <- apply(matrix(simulation, nrow = nsim), 1, mean)
+```
+
+Look at a histogram of this distribution and at its summary
+```{r histogram}
 hist(dist)
+summary(dist)
 ```
 
 According to [Wikipedia][https://en.wikipedia.org/wiki/Exponential_distribution#Mean.2C_variance.2C_moments_and_median] 
@@ -42,15 +58,17 @@ means <- c(tmean, mean(dist))
 names(means) <- c("Theoretical Mean", "Distribution Mean")
 means
 ```
+As we can see distribution mean is very close to theoretical mean, this is exactly what LLN (law of large numbers) states: average limits to what it estimating, the population mean.
+```{r plot-means}
+ggplot(df, aes(m)) + geom_histogram(bins = 20) + geom_vline(xintercept = tmean, color = "red") + geom_vline(xintercept = mean(dist), color = "blue")
+```
+On the plot above we see red line that represents theoretical meand and blue line that shows mean of distribution. Lines are very close to each other due to big number of simulations. 
+
 Variances
 ```{r vars-compare}
 variances <- c(tvar, var(dist))
 names(variances) <- c("Theoretical Var", "Distribution Var")
 variances
 ```
+These two values are complete diffirent becayse variance of means of samples has nothing common with theoretical variance of exponential distribution.
 
-## Simulations
-
-```{r simulation}
-nsim <- 1000
-sdist <- sample(dist, )
