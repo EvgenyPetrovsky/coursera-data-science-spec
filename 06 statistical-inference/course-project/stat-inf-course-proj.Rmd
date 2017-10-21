@@ -70,5 +70,21 @@ variances <- c(tvar, var(dist))
 names(variances) <- c("Theoretical Var", "Distribution Var")
 variances
 ```
-These two values are complete diffirent becayse variance of means of samples has nothing common with theoretical variance of exponential distribution.
+These two values are complete diffirent because variance of means of samples has nothing common with theoretical variance of exponential distribution.
 
+Let's look at disctributions. For this task we will find statistics with t-test
+```{r t.test}
+tt <- t.test(dist, mu = tmean, conf.level = 0.95)
+tt$estimate
+
+tt$conf.int
+```
+
+now we will plot density of our distribution and highlight confidence intervals
+```{r distr}
+df <- data.frame(m = dist)
+g <- ggplot(data = df, aes(m)) + 
+  geom_density() +
+  geom_vline(xintercept = tt$conf.int)
+g
+```
