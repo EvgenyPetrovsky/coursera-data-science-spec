@@ -1,5 +1,5 @@
 ---
-title: "Statistical Inference course project"
+title: "Statistical Inference course project: part 1"
 author: "Evgeny Petrovskiy"
 date: '2017-10-21'
 output:

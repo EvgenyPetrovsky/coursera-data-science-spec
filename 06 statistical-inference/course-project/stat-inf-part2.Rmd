@@ -1,0 +1,14 @@
+---
+title: "Statistical Inference course project: part 2"
+author: "Evgeny Petrovskiy"
+date: '2017-10-21'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
