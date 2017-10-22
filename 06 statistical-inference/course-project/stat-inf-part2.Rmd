@@ -36,11 +36,11 @@ summary(tg)
 get VC values for each dose
 ```{r}
 vc05 <- subset(tg, tg$sup == "VC" & tg$dose == 0.5)$len
-vc10 <- subset(tg, tg$sup == "VC" & tg$dose == 0.5)$len
-vc20 <- subset(tg, tg$sup == "VC" & tg$dose == 0.5)$len
+vc10 <- subset(tg, tg$sup == "VC" & tg$dose == 1.0)$len
+vc20 <- subset(tg, tg$sup == "VC" & tg$dose == 2.0)$len
 oj05 <- subset(tg, tg$sup == "OJ" & tg$dose == 0.5)$len
-oj10 <- subset(tg, tg$sup == "OJ" & tg$dose == 0.5)$len
-oj20 <- subset(tg, tg$sup == "OJ" & tg$dose == 0.5)$len
+oj10 <- subset(tg, tg$sup == "OJ" & tg$dose == 1.0)$len
+oj20 <- subset(tg, tg$sup == "OJ" & tg$dose == 2.0)$len
 
 ```
 
