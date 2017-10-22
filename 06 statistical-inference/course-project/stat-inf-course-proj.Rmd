@@ -1,8 +1,10 @@
 ---
 title: "Statistical Inference course project"
 author: "Evgeny Petrovskiy"
-date: "10/21/2017"
-output: html_document
+date: '2017-10-21'
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -28,51 +30,71 @@ n <- 40; lambda <- 0.2
 ```
 
 Run simulations and before we calculate averages let's look into original distribution
+
 ```{r run-sim}
 simulation <- rexp(n * nsim, lambda)
 hist(simulation)
 ```
+
 and calculate avewrage for each simulation
+
 ```{r calc-avg}
 dist <- apply(matrix(simulation, nrow = nsim), 1, mean)
+df <- data.frame(means = dist)
+
 ```
 
 Look at a histogram of this distribution and at its summary
+
 ```{r histogram}
 hist(dist)
 summary(dist)
 ```
 
-According to [Wikipedia][https://en.wikipedia.org/wiki/Exponential_distribution#Mean.2C_variance.2C_moments_and_median] 
+According to [Wikipedia](https://en.wikipedia.org/wiki/Exponential_distribution#Mean.2C_variance.2C_moments_and_median):
+
 * theoretical mean E[X] = 1 / lambda = beta
 * theoretical variance Var[X] = 1 / lambda^2 = beta^2
 
 Knowing that we can calculate theoretical values
+
 ```{r theoretocal-vals}
 #calculate results
-tmean <- 1 / lambda; tvar <- beta^2
+tmean <- 1 / lambda; beta <- tmean; tvar <- beta^2
 ```
+
 And compare them to distribution statistics. Means
+
 ```{r means-compare}
 means <- c(tmean, mean(dist))
 names(means) <- c("Theoretical Mean", "Distribution Mean")
 means
 ```
+
 As we can see distribution mean is very close to theoretical mean, this is exactly what LLN (law of large numbers) states: average limits to what it estimating, the population mean.
+
 ```{r plot-means}
-ggplot(df, aes(m)) + geom_histogram(bins = 20) + geom_vline(xintercept = tmean, color = "red") + geom_vline(xintercept = mean(dist), color = "blue")
+gg <- ggplot(df, aes(means)) + 
+  geom_histogram(bins = 20) + 
+  geom_vline(xintercept = tmean, color = "red") + 
+  geom_vline(xintercept = mean(dist), color = "blue")
+gg
 ```
+
 On the plot above we see red line that represents theoretical meand and blue line that shows mean of distribution. Lines are very close to each other due to big number of simulations. 
 
 Variances
+
 ```{r vars-compare}
 variances <- c(tvar, var(dist))
 names(variances) <- c("Theoretical Var", "Distribution Var")
 variances
 ```
+
 These two values are complete diffirent because variance of means of samples has nothing common with theoretical variance of exponential distribution.
 
 Let's look at disctributions. For this task we will find statistics with t-test
+
 ```{r t.test}
 tt <- t.test(dist, mu = tmean, conf.level = 0.95)
 tt$estimate
@@ -80,11 +102,17 @@ tt$estimate
 tt$conf.int
 ```
 
-now we will plot density of our distribution and highlight confidence intervals
+Now we will plot density of our distribution and compare it to density of normal distribution.
+
 ```{r distr}
-df <- data.frame(m = dist)
-g <- ggplot(data = df, aes(m)) + 
-  geom_density() +
-  geom_vline(xintercept = tt$conf.int)
-g
+gg <- ggplot(data = df, aes(means)) + 
+  geom_density(color = "black", size = 2) +
+  geom_vline(xintercept = mean(dist)) +
+  stat_function(
+    fun = dnorm, color = "red", size = 1,
+    args = list(mean = mean(dist), sd = sd(dist))
+  )
+gg
 ```
+
+Normal distribution density is drawn with red color and stays very close to distribution of meant acquired during simulation. This is consequence of CLT, which states that, _in most situations, when independent random variables are added, their properly normalized sum tends toward a normal distribution (informally a "bell curve") even if the original variables themselves are not normally distributed_.([Wikipedia](https://en.wikipedia.org/wiki/Central_limit_theorem))
