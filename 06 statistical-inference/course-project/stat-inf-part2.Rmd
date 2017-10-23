@@ -12,13 +12,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 ```
 
+In this assignment we are going to analyze ToothGrowth data 
+
 load ToothGrowth dataset
 ```{r load}
 data("ToothGrowth")
 tg <- ToothGrowth
+str(tg)
 ```
 
 display data 
+let's break data into groups that represent dose and then look compare supplemet types used for the same doses.
+
 ```{r plot}
 gg <- ggplot(data = tg, aes(x = supp, y = len, color = supp)) +
   #geom_point(shape = 1) + 
@@ -29,11 +34,13 @@ gg
 ```
 
 summary of data
+
 ```{r summary}
 summary(tg)
 ```
 
-get VC values for each dose
+get len values for each dose and supplement type
+
 ```{r}
 vc05 <- subset(tg, tg$sup == "VC" & tg$dose == 0.5)$len
 vc10 <- subset(tg, tg$sup == "VC" & tg$dose == 1.0)$len
@@ -41,9 +48,30 @@ vc20 <- subset(tg, tg$sup == "VC" & tg$dose == 2.0)$len
 oj05 <- subset(tg, tg$sup == "OJ" & tg$dose == 0.5)$len
 oj10 <- subset(tg, tg$sup == "OJ" & tg$dose == 1.0)$len
 oj20 <- subset(tg, tg$sup == "OJ" & tg$dose == 2.0)$len
-
 ```
 
-say that vc10 gives bigger len than vc05
+## test 1: relation between dose and length
 
-say that oj05 is more effective than vc05
+let's say that 1.0 mg of vitamin C received as ascorbic acid gives bigger effect on length than 0.5 mg of the same supplement type. Null hypotesis is that length doesn't depend on dose. Alternative hypothesis is that average value for 1.0 mg is larger than average value for 0.5 Dataset includes only 10 measurements for each type for each dose so we should use t-test. All observations are independent, paired = fasle
+
+```{r "t-test vc 05 vs vc10"}
+t.test(vc10, vc05, paired = FALSE, alternative = "g")
+```
+
+result shows that confidence interval doesn't includes 0, which means that alternative hypothesis is true. The 1.0 mg of vitamin C received as ascorbic acid results in bigger length.
+
+## test 2: difference in length for different supplement types
+Say that oj05 is more effective than vc05
+null hypotesys ia that orange juice and vitamin C are equally effective (result in the same length) in 5mg dose. Alternative hypothesis is that they have different impact on growth.
+
+```{r "t-test vc 05 vs oj05"}
+t.test(oj05, vc05, paired = FALSE)
+```
+
+Lastly hypothesis that 2mg of vitamin C received in orange juice and the same dose received as ascorbic acid have different length
+
+```{r "t-test vc 05 vs vc10"}
+t.test(oj20, vc20, paired = FALSE)
+```
+
+for this test 95% confidence interval includes 0 so we failed to reject null hypothesis.
