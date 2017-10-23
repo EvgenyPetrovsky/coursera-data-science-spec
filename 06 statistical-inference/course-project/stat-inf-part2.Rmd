@@ -70,7 +70,7 @@ t.test(oj05, vc05, paired = FALSE)
 
 Lastly hypothesis that 2mg of vitamin C received in orange juice and the same dose received as ascorbic acid have different length
 
-```{r "t-test vc 05 vs vc10"}
+```{r "t-test oj20 vs vc20"}
 t.test(oj20, vc20, paired = FALSE)
 ```
 
