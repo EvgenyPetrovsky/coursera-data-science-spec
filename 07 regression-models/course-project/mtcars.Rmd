@@ -83,7 +83,19 @@ Let's build models that involve transmission type (`am`), displacement (`disp`) 
 fit1 <- lm(log(mpg) ~ wt, data = mtcars)
 fit2 <- lm(log(mpg) ~ wt + disp, data = mtcars)
 fit3 <- lm(log(mpg) ~ wt + disp + hp, data = mtcars)
+fit.all <- lm(log(mpg) ~ ., data = mtcars)
 
-anova(fit1, fit2, fit3)
+anova(fit1, fit2, fit3, fit.all)
 ```
-fit1 <-
+
+Anova test shows that after considering `wt` model can be slightly improved with `disp` and `hp` but other regressors doesn't make model significantly better.
+
+now let's make separate models for manual and automatic transmissions
+
+```{r am-models}
+fitA <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 0))
+fitM <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 1))
+
+plot(mpg ~ wt, col = factor(am), data = mtcars, pch = 18)
+plot(exp(fitA$fitted.values) ~ subset(mtcars, am == 0)$wt)
+```
