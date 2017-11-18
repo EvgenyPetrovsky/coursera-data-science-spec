@@ -1,0 +1,73 @@
+---
+title: "Regression Models Course Project"
+author: "Evgeny Petrovskiy"
+date: "11/18/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+
+```
+
+## first look at data
+
+Goal of this assignment is analyze `mtcars` dataset and to answer two questions
+
+* 
+
+Below is desription of columns for mtcars dataset: this is a data frame with 32 observations on 11 variables.
+
+1.	mpg	Miles/(US) gallon
+2.	cyl	Number of cylinders
+3.	disp	Displacement (cu.in.)
+4.	hp	Gross horsepower
+5.	drat	Rear axle ratio
+6.	wt	Weight (1000 lbs)
+7.	qsec	1/4 mile time
+8.	vs	V/S
+9.	am	Transmission (0 = automatic, 1 = manual)
+10.	gear	Number of forward gears
+11.	carb	Number of carburetors
+
+
+```{r mtcars}
+str(mtcars)
+```
+
+## Exploratory analysys
+
+```{r "explore"}
+plotx <- function(x) {
+  plot(
+    mtcars$mpg ~ mtcars[,x], 
+    col = factor(mtcars$am), 
+    pch = 19, 
+    xlab = x, ylab = "mpg"
+  )
+}
+cols <- names(mtcars)
+cols <- cols[!cols %in% c("mpg", "am")]
+par(mfrow = c(1,1))
+# sapply(X = cols, FUN = plotx)
+for (i in cols) plotx(i)
+
+```
+
+looking at data above we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
+
+let's look at them on logarirhmic scale
+```{r "closelook"}
+for (i in c("disp", "hp", "wt")) {
+  plot(
+    log(mtcars$mpg) ~ mtcars[, i],
+    col = factor(mtcars$am), pch = 19, xlab = i
+  )
+}
+```
+
+FolLowing correlations look very strong 
+
+* `Miles per galon` and `Displacement`
+* `Miles per galon` and `Horse powers`
