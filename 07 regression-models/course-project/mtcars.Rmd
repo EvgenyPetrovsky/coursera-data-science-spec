@@ -32,27 +32,42 @@ Below is desription of columns for mtcars dataset: this is a data frame with 32 
 11.	carb	Number of carburetors
 
 
-```{mtcars}
+```{r mtcars}
 str(mtcars)
 ```
 
 ## Exploratory analysys
 
 ```{r "explore"}
-p <- ggplot(mtcars, aes(wt, mpg, color = factor(cyl))) + geom_point()
-p + facet_grid(. ~ am)
+plotx <- function(x) {
+  plot(
+    mtcars$mpg ~ mtcars[,x], 
+    col = factor(mtcars$am), 
+    pch = 19, 
+    xlab = x, ylab = "mpg"
+  )
+}
+cols <- names(mtcars)
+cols <- cols[!cols %in% c("mpg", "am")]
+par(mfrow = c(1,1))
+# sapply(X = cols, FUN = plotx)
+for (i in cols) plotx(i)
 
-p + facet_grid(. ~ am, aes(disp, mpg))
 ```
 
-## Including Plots
+looking at data above we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-
-names(mtcars)
+let's look at them on logarirhmic scale
+```{r "closelook"}
+for (i in c("disp", "hp", "wt")) {
+  plot(
+    log(mtcars$mpg) ~ mtcars[, i],
+    col = factor(mtcars$am), pch = 19, xlab = i
+  )
+}
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+FolLowing correlations look very strong 
+
+* `Miles per galon` and `Displacement`
+* `Miles per galon` and `Horse powers`
