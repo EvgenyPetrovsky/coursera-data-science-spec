@@ -21,7 +21,7 @@ In order to answe rthis questions we apply different techniques Below: first we 
 
 ## first look at data
 
-Below is desription of columns for mtcars dataset: this is a data frame with 32 observations on 11 variables.
+`mtcars` is a data frame with 32 observations that include 11 different measurements. Below is desription of columns for  dataset: 
 
 1.	`mpg`	Miles/(US) gallon
 2.	`cyl`	Number of cylinders
@@ -42,30 +42,15 @@ str(mtcars)
 
 ## Exploratory analysys
 
-```{r "explore"}
-cols <- names(mtcars)
-cols <- cols[!cols %in% c("mpg", "am")]
-par(mfrow = c(1,1))
-# sapply(X = cols, FUN = plotx)
-for (x in cols) {
-  plot(
-    mtcars$mpg ~ mtcars[,x], 
-    col = factor(mtcars$am), 
-    pch = 19, 
-    xlab = x, ylab = "mpg"
-  ) 
-}
-
-```
-
-looking at data above we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
+Appendix I shows relation bewteen MPG and all other variables of the dataset. Looking at that data we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
 
 let's look at them on logarirhmic scale
 ```{r "closelook"}
 for (i in c("disp", "hp", "wt")) {
   plot(
     log(mtcars$mpg) ~ mtcars[, i],
-    col = factor(mtcars$am), pch = 19, xlab = i
+    col = factor(mtcars$am), pch = 19, xlab = i,
+    main = paste("logarithmic relation between MPG and", toupper(i), sep = " ")
   )
 }
 ```
@@ -78,7 +63,7 @@ Following correlations look very strong
 Relation bewteen displacement & horse powers
 
 ```{r rel-disp-hp}
-plot(hp ~ disp, data = mtcars)
+plot(hp ~ disp, data = mtcars, main = "Relation between horse-powers and displacement")
 ```
 
 Let's build models that involve transmission type (`am`), displacement (`disp`) and horse powers (`hp`) as regressors and perform anova test. 
@@ -97,9 +82,32 @@ Anova test shows that after considering `wt` model can be slightly improved with
 now let's make separate models for manual and automatic transmissions
 
 ```{r am-models}
-fitA <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 0))
-fitM <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 1))
+fitA <- lm(log(mpg) ~ wt, data = subset(mtcars, am == 0))
+fitM <- lm(log(mpg) ~ wt, data = subset(mtcars, am == 1))
 
-plot(mpg ~ wt, col = factor(am), data = mtcars, pch = 18)
-plot(exp(fitA$fitted.values) ~ subset(mtcars, am == 0)$wt)
+plot(log(mpg) ~ wt, col = factor(am), data = mtcars, pch = 18,
+     main = "Regression lines for Auto and Manual transmissions")
+#plot(exp(fitA$fitted.values) ~ subset(mtcars, am == 0)$wt)
+abline(fitA, col = 1)
+abline(fitM, col = 2)
+```
+
+# Appendices
+
+## Appendix I
+
+```{r "explore"}
+cols <- names(mtcars)
+cols <- cols[!cols %in% c("mpg")]
+par(mfrow = c(1,1))
+# sapply(X = cols, FUN = plotx)
+for (x in cols) {
+  plot(
+    mtcars$mpg ~ mtcars[,x], 
+    col = factor(mtcars$am), 
+    pch = 19, 
+    xlab = x, ylab = "mpg"
+  ) 
+}
+
 ```
