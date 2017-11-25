@@ -2,7 +2,9 @@
 title: "Regression Models Course Project"
 author: "Evgeny Petrovskiy"
 date: "11/18/2017"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,9 +19,9 @@ Goal of this assignment is to analyze `mtcars` dataset and answer two questions:
 * "Is an automatic or manual transmission better for MPG"
 * "Quantify the MPG difference between automatic and manual transmissions"
 
-In order to answe rthis questions we apply different techniques Below: first we do exploratory analysis, then we apply regression models and assess their quality, finally we are trying to answer questions based on information we gathered.
+In order to answer this question we apply different techniques below: first we do exploratory analysis, then we apply regression models and assess their quality, finally we are trying to answer questions based on information we gathered.
 
-## first look at data
+## First look at data
 
 `mtcars` is a data frame with 32 observations that include 11 different measurements. Below is desription of columns for  dataset: 
 
@@ -42,7 +44,7 @@ str(mtcars)
 
 ## Exploratory analysys
 
-Appendix I shows relation bewteen MPG and all other variables of the dataset. Looking at that data we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
+We are trying to establish relation between mpg and other measured parameters. Appendix I shows relation bewteen MPG and all other variables of the dataset. Looking at that data we can make a conclusion that *mpg* value correlates with *wt*, *disp*, *hp*
 
 let's look at them on logarirhmic scale
 ```{r "closelook"}
@@ -59,12 +61,15 @@ Following correlations look very strong
 
 * `Miles per galon` and `Wieght`
 * `Miles per galon` and `Displacement`
+* `Miles per galon` and `Gross horsepower`
 
 Relation bewteen displacement & horse powers
 
 ```{r rel-disp-hp}
-plot(hp ~ disp, data = mtcars, main = "Relation between horse-powers and displacement")
+plot(hp ~ disp, data = mtcars, main = "Relation between horsepower and displacement")
 ```
+
+## Fitting models
 
 Let's build models that involve transmission type (`am`), displacement (`disp`) and horse powers (`hp`) as regressors and perform anova test. 
 
@@ -79,7 +84,30 @@ anova(fit1, fit2, fit3, fit.all)
 
 Anova test shows that after considering `wt` model can be slightly improved with `disp` and `hp` but other regressors doesn't make model significantly better.
 
-now let's make separate models for manual and automatic transmissions
+```{r diagnose-fit1}
+summary(fit1)
+
+plot(
+  x = mtcars$wt, y = fit1$res, xlab = "Weight", ylab = "residuals",
+  main = "Residuals plot for log(MPG) ~ WT model")
+abline(0, 0)
+hist(fit1$res)
+```
+
+Regression model for MPG predicted based on Weight has r^2 ~ 80%, residuals are normally distributed around 0, histogram doesn't look smooth because we have few (32) observations.
+
+Let's exclude displacement and horsepower from regressors list and compare models that involve wieght only and weight & am-characteristic.
+
+```{r am-anova}
+fit1   <- lm(log(mpg) ~ wt, data = mtcars)
+fit1am <- lm(log(mpg) ~ wt + am, data = mtcars)
+
+anova(fit1, fit1am)
+```
+
+Anova test doesn't find `am` regressor to be significant. For data in the dataset we can't say that automatic-manual transmission makes any difference in model fitting.
+
+Before making conclusions let's separately fit models for manual and automatic transmissions and visualize them on one chart. Please be aware that chart shows `mpg` in log units (so we need to exponentiate them to get real data)
 
 ```{r am-models}
 fitA <- lm(log(mpg) ~ wt, data = subset(mtcars, am == 0))
@@ -90,7 +118,31 @@ plot(log(mpg) ~ wt, col = factor(am), data = mtcars, pch = 18,
 #plot(exp(fitA$fitted.values) ~ subset(mtcars, am == 0)$wt)
 abline(fitA, col = 1)
 abline(fitM, col = 2)
+
 ```
+
+## Conclusions
+
+Trying to answer questions about which transmission is better first of all we have to mention that data is not sufficient enough to draw conclusion because: * other parameters for cars vary a lot (we do not have paired obsevations)
+* tests regression models do not recognize `am` regressor as meaningful
+
+But if we had to make some assumptions based on last figure "Regression lines for Auto and Manual transmissions" we would say that 
+
+1. cars with automatic transmission better for heavy cars (weight > 3000 lbs) 
+2. fuel consumtion for cars with automatic transmission increases less with weight gain
+
+below are calculations for change in MPG for car with average weight if we would increase it by 1000 lbs.
+
+```{r coefficients}
+mwt <- mean(mtcars$wt)
+print(paste("Average weight in lbs", round(mwt, 1)*1000))
+deltaA <- sum(c(-1, 1) * exp(predict(fitA, data.frame(wt = c(mwt, mwt + 1)))))
+deltaM <- sum(c(-1, 1) * exp(predict(fitM, data.frame(wt = c(mwt, mwt + 1)))))
+print(paste("Change in MPG with 1000 lbs gain to Average weight for Manual transmission", round(deltaM, 1), sep = " "))
+print(paste("Change in MPG with 1000 lbs gain to Average weight for Automatic transmission", round(deltaA, 1), sep = " "))
+```
+
+As we can see decrease in MPG is less significant for cars with automatic transmission.
 
 # Appendices
 
