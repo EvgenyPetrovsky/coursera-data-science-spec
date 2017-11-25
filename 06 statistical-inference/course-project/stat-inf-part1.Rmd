@@ -86,14 +86,14 @@ On the plot above we see red line that represents theoretical meand and blue lin
 Variances
 
 ```{r vars-compare}
-variances <- c(tvar, var(dist))
+variances <- c(tvar, var(simulation))
 names(variances) <- c("Theoretical Var", "Distribution Var")
 variances
 ```
 
-These two values are complete diffirent because variance of means of samples has nothing common with theoretical variance of exponential distribution.
+These two values are also close to each other.
 
-Let's look at disctributions. For this task we will find statistics with t-test
+Let's look at distributions. For this task we will find statistics with t-test
 
 ```{r t.test}
 tt <- t.test(dist, mu = tmean, conf.level = 0.95)

@@ -1,6 +1,7 @@
-# Peer-graded Assignment: Regression Models Course Project# 
+# Peer-graded Assignment: Regression Models Course Project
 
-*Important Information*
+**Important Information**
+
 It is especially important to submit this assignment before the deadline, November 19, 11:59 PM PST, because it must be graded by others. If you submit late, there may not be enough classmates around to review your work. This makes it difficult - and in some cases, impossible - to produce a grade. Submit on time to avoid these risks.
 
 ## Instructions

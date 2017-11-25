@@ -43,19 +43,18 @@ str(mtcars)
 ## Exploratory analysys
 
 ```{r "explore"}
-plotx <- function(x) {
+cols <- names(mtcars)
+cols <- cols[!cols %in% c("mpg", "am")]
+par(mfrow = c(1,1))
+# sapply(X = cols, FUN = plotx)
+for (x in cols) {
   plot(
     mtcars$mpg ~ mtcars[,x], 
     col = factor(mtcars$am), 
     pch = 19, 
     xlab = x, ylab = "mpg"
-  )
+  ) 
 }
-cols <- names(mtcars)
-cols <- cols[!cols %in% c("mpg", "am")]
-par(mfrow = c(1,1))
-# sapply(X = cols, FUN = plotx)
-for (i in cols) plotx(i)
 
 ```
 
@@ -71,7 +70,36 @@ for (i in c("disp", "hp", "wt")) {
 }
 ```
 
-FolLowing correlations look very strong 
+Following correlations look very strong 
 
+* `Miles per galon` and `Wieght`
 * `Miles per galon` and `Displacement`
-* `Miles per galon` and `Horse powers`
+
+Relation bewteen displacement & horse powers
+
+```{r rel-disp-hp}
+plot(hp ~ disp, data = mtcars)
+```
+
+Let's build models that involve transmission type (`am`), displacement (`disp`) and horse powers (`hp`) as regressors and perform anova test. 
+
+``` {r "models"}
+fit1 <- lm(log(mpg) ~ wt, data = mtcars)
+fit2 <- lm(log(mpg) ~ wt + disp, data = mtcars)
+fit3 <- lm(log(mpg) ~ wt + disp + hp, data = mtcars)
+fit.all <- lm(log(mpg) ~ ., data = mtcars)
+
+anova(fit1, fit2, fit3, fit.all)
+```
+
+Anova test shows that after considering `wt` model can be slightly improved with `disp` and `hp` but other regressors doesn't make model significantly better.
+
+now let's make separate models for manual and automatic transmissions
+
+```{r am-models}
+fitA <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 0))
+fitM <- lm(log(mpg) ~ wt + disp + hp, data = subset(mtcars, am == 1))
+
+plot(mpg ~ wt, col = factor(am), data = mtcars, pch = 18)
+plot(exp(fitA$fitted.values) ~ subset(mtcars, am == 0)$wt)
+```
