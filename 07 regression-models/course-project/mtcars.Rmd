@@ -3,8 +3,9 @@ title: "Regression Models Course Project"
 author: "Evgeny Petrovskiy"
 date: "11/18/2017"
 output:
-  html_document: default
+  word_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -158,7 +159,8 @@ for (x in cols) {
     mtcars$mpg ~ mtcars[,x], 
     col = factor(mtcars$am), 
     pch = 19, 
-    xlab = x, ylab = "mpg"
+    xlab = x, ylab = "mpg",
+    main = paste("Relation between MPG and", toupper(x), sep = " ")
   ) 
 }
 
